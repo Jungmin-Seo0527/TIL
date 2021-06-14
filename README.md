@@ -643,4 +643,84 @@ class RateDiscountPolicyTest {
 }
 ```
 
+### 3-2. 새로운 할인 정책 적용과 문제점
+
+#### 할인정책을 애플리케이션에 적용하기
+
+```java
+package hello.core1.order;
+
+import hello.core1.discount.DiscountPolicy;
+import hello.core1.member.Member;
+import hello.core1.member.MemberRepository;
+import hello.core1.member.MemoryMemberRepository;
+
+public class OrderServiceImpl implements OrderService {
+
+    private final MemberRepository memberRepository = new MemoryMemberRepository();
+    private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+
+    public Order createOrder(Long memberId, String itemName, int itemPrice) {
+        Member member = memberRepository.findById(memberId);
+        int discountPrice = discountPolicy.discount(member, itemPrice);
+
+        return new Order(memberId, itemName, itemPrice, discountPrice);
+    }
+}
+
+```
+
+* 문제점 발견
+    * 우리는 역할과 구현을 충실하게 분리했다. -> OK
+    * 다형성도 활용하고, 인터페이스와 구현 객체를 분리했다. -> OK
+    * OCP, DIP 같은 객체지향 설계 원칙을 충식히 준수했다.
+        * 그렇게 보이지만 사실은 아니다.
+    * DIP: 주문 서비스 클라이언트(`OrderServiceImpl`)는 `DiscoutPolicy`인터페이스에 의존하면서 DIP를 지킨것 같지만...
+        * 클래스 의존관계를 분석해보자. 추상(인터페이스) 뿐만 아니라 **구체(구현) 클래스에도 의존**하고 있다.
+            * 추상(인터페이스)의존: `DiscountPolicy`
+            * 구체(구현)클래스: `FixDiscountPolicy`, `RateDiscountPolicy`
+    * OCP: 변경하지 않고 확장할 수 있다고 했는데
+        * 지금 코드는 기능을 확장해서 변경하면, 클라이언트 코드에 영향을 준다! 따라서 OCP를 위반한다.
+
+#### 할인정책 관련 클래스 다이어그램 분석
+
+* 기대했던 의존관계
+  ![](https://i.ibb.co/FqD3wSs/bandicam-2021-06-14-18-55-00-459.jpg)
+    * 지금까지 단순히 `DiscountPolicy`인터페이스만 의존한다고 생각했다.
+
+* 실제 의존 관계
+  ![](https://i.ibb.co/gD5h1kc/bandicam-2021-06-14-18-55-57-900.jpg)
+    * 잘보면 클라이언트인 `OrderServiceImpl`이 `DiscountPolicy`뿐만 아니라 `FixDiscountPolciy`인 구체 클래스도 함께 의존하고 있다. 실제 코드를 보면 의존하고
+      있다! **DIP 위반**
+
+* 정책 변경
+  ![](https://i.ibb.co/WWFzd9q/bandicam-2021-06-14-18-57-50-219.jpg)
+    * **중요!!!**: 그래서 `FixDiscountPolicy`를 `RateDiscountPolicy`로 변경하는 순간 `OrderServiceImpl`의 소스 코드도 함께 변경해야 한다. **OCP
+      위반**
+
+#### 어떻게 문제를 해결할 수 있을까???
+
+* 클라이언트 코드인 `OrderServiceImpl`은 `DiscountPolicy`의 인터페이스 뿐만 아니라 구체 클래스도 함께 의존한다.
+* 그래서 구체 클래스를 변경할 때 클라이언트 코드도 함께 변경해야 한다.
+* **DIP 위반** -> 추상에만 의존하도록 변경(인터페이스에만 의존)
+* DIP를 위반하지 않도록 인터페이스에만 의존하도록 의존관계를 변경하면 된다.
+  ![](https://i.ibb.co/VWY7JMh/bandicam-2021-06-14-19-01-04-202.jpg)
+
+##### OrderServiceImpl.java(수정) - 인터페이스에만 의존하도록 코드 변경
+
+```java
+public class OrderServiceImpl implements OrderService {
+    // private final DiscountPolicy discountPolicy = new RateDiscountPolicy();
+    private final DiscountPolicy discountPolicy;
+}
+```
+
+* 인터페이스에만 의존하도록 설계와 코드를 변경했다.
+* **그런데 구현체가 없는데 어떻게 코드를 실행할 수 있을까?**
+* 실제 실행을 해보면 NPE(Null Pointer Exception)가 발생한다.
+
+
+* **해결방안**
+* 이 문제를 해결하려면 누군가가 클라이언트인 `OrderServiceImapl`에 `DiscountPolicy`의 구현 객체를 대신 생성하고 주입해주어야 한다.
+
 ## Note
