@@ -336,4 +336,162 @@ public class MemberServiceTest {
 회원을 메모리가 아닌 실제 DB에서 조회하고, 정률 할인 정책(주문 금액에 따라 %할인)을 지원해도 주문 서비스를 변경하지 않아도 된다.    
 협력 관계를 그대로 재사용 할 수 있다.
 
+### 2-7. 주문과 할인 도메인 개발
+
+#### DiscountPolicy.java - 할인 정책 인터페이스
+
+* `src/main/java/hello/core1/discount/DiscountPolicy.java`
+
+```java
+package hello.core1.discount;
+
+import hello.core1.member.Member;
+
+public interface DiscountPolicy {
+
+    /**
+     * @return 할인 대상 금액
+     */
+    int discount(Member member, int price);
+}
+```
+
+#### FixDiscountPolicy.java - 정액 할인 정책 구현체
+
+* `src/main/java/hello/core1/discount/FixDiscountPolicy.java`
+
+```java
+package hello.core1.discount;
+
+import hello.core1.member.Grade;
+import hello.core1.member.Member;
+
+public class FixDiscountPolicy implements DiscountPolicy {
+
+    private int discountFixAmout = 1000;
+
+    @Override
+    public int discount(Member member, int price) {
+        if (member.getGrade() == Grade.VIP) {
+            return discountFixAmout;
+        } else {
+            return 0;
+        }
+    }
+}
+```
+
+#### Order.java - 주문 엔티티
+
+* `src/main/java/hello/core1/order/Order.java`
+
+```java
+package hello.core1.order;
+
+public class Order {
+
+    private Long memberId;
+    private String itemName;
+    private int itemPrice;
+    private int discountPrice;
+
+    public Order(Long memberId, String itemName, int itemPrice, int discountPrice) {
+        this.memberId = memberId;
+        this.itemName = itemName;
+        this.itemPrice = itemPrice;
+        this.discountPrice = discountPrice;
+    }
+
+    public int calculatePrice() {
+        return itemPrice - discountPrice;
+    }
+
+    public Long getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public int getItemPrice() {
+        return itemPrice;
+    }
+
+    public void setItemPrice(int itemPrice) {
+        this.itemPrice = itemPrice;
+    }
+
+    public int getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(int discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "memberId=" + memberId +
+                ", itemName='" + itemName + '\'' +
+                ", itemPrice=" + itemPrice +
+                ", discountPrice=" + discountPrice +
+                '}';
+    }
+}
+```
+
+#### OrderService.java - 주문 서비스 인터페이스
+
+* `src/main/java/hello/core1/order/OrderService.java`
+
+```java
+package hello.core1.order;
+
+public interface OrderService {
+
+    Order createOrder(Long memberId, String itemName, int itemPrice);
+}
+```
+
+#### OrderServiceImpl.java - 주문 서비스 구현체
+
+* `src/main/java/hello/core1/order/OrderServiceImpl.java`
+
+```java
+package hello.core1.order;
+
+import hello.core1.discount.DiscountPolicy;
+import hello.core1.discount.FixDiscountPolicy;
+import hello.core1.member.Member;
+import hello.core1.member.MemberRepository;
+import hello.core1.member.MemoryMemberRepository;
+
+public class OrderServiceImpl implements OrderService {
+
+    private final MemberRepository memberRepository = new MemoryMemberRepository();
+    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
+
+    @Override
+    public Order createOrder(Long memberId, String itemName, int itemPrice) {
+        Member member = memberRepository.findById(memberId);
+        int discountPrice = discountPolicy.discount(member, itemPrice);
+
+        return new Order(memberId, itemName, itemPrice, discountPrice);
+    }
+}
+```
+
+주문 생성 요청이 오면, 회원 정보를 조회하고, 할인 정책을 적용한 다음 주문 객체를 생성해서 반환한다.    
+**메모리 회원 리포지토리와, 고정 금액 할인 정책을 구현체로 생성한다.**
+
 ## Note
