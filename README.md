@@ -494,4 +494,76 @@ public class OrderServiceImpl implements OrderService {
 주문 생성 요청이 오면, 회원 정보를 조회하고, 할인 정책을 적용한 다음 주문 객체를 생성해서 반환한다.    
 **메모리 회원 리포지토리와, 고정 금액 할인 정책을 구현체로 생성한다.**
 
+### 2-8. 주문과 할인 도메인 실행과 테스트
+
+#### OrderApp.java - 주문과 할인 정책 실행
+
+* `src/main/java/hello/core1/OrderApp.java`
+* JUnit을 사용하지 않는 테스트
+
+```java
+package hello.core1;
+
+import hello.core1.member.Grade;
+import hello.core1.member.Member;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+import hello.core1.order.Order;
+import hello.core1.order.OrderService;
+import hello.core1.order.OrderServiceImpl;
+
+public class OrderApp {
+    public static void main(String[] args) {
+        MemberService memberService = new MemberServiceImpl();
+        OrderService orderService = new OrderServiceImpl();
+
+        Long memberId = 1L;
+        Member member = new Member(memberId, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        Order order = orderService.createOrder(memberId, "itemA", 10000);
+
+        System.out.println("order = " + order);
+        System.out.println("order.calculationPrice = " + order.calculatePrice());
+    }
+}
+```
+
+애플리케이션 로직으로 이렇게 테스트 하는 것은 좋은 방법이 아니다.
+
+#### OrderServiceTest.java - 주문과 할인 정책 테스트(JUnit)
+
+* `src/test/java/hello/core1/order/OrderServiceTest.java`
+
+```java
+package hello.core1.order;
+
+import hello.core1.member.Grade;
+import hello.core1.member.Member;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+class OrderServiceTest {
+
+    MemberService memberService = new MemberServiceImpl();
+    OrderService orderService = new OrderServiceImpl();
+
+    @Test
+    void createOrder() {
+        // given
+        Long memberId = 1L;
+        Member member = new Member(memberId, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        // when
+        Order order = orderService.createOrder(memberId, "itemA", 10000);
+
+        // then
+        Assertions.assertThat(order.getDiscountPrice()).isEqualTo(1000);
+    }
+}
+```
+
 ## Note
