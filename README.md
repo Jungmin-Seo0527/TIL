@@ -58,7 +58,7 @@ test {
     * 회원을 가입하고 조회할 수 있다.
     * 회원은 일반과 VIP 두 가지 등급이 있다.
     * 회원 데이터는 자체 DB를 구출할 수 있고, 외부 시스템과 연동할 수 있다.(미확정)
-  
+
 
 * 회원 도메인 협력 관계
   ![](https://i.ibb.co/jJp5VqK/bandicam-2021-06-14-11-14-52-338.jpg)
@@ -68,5 +68,160 @@ test {
 
 * 회원 객체 다이어그램
   ![](https://i.ibb.co/8Bb4RfZ/bandicam-2021-06-14-11-16-55-936.jpg)
+
+### 2-4. 회원 도메인 개발
+
+#### 회원 엔티티
+
+##### Grade.java - 회원 등급
+
+* `src/main/java/hello/core1/member/Grade.java`
+
+```java
+package hello.core1.member;
+
+public enum Grade {
+    BASIC,
+    VIP
+}
+```
+
+##### Member.java - 회원 엔티티
+
+* `src/main/java/hello/core1/member/Member.java`
+
+```java
+package hello.core1.member;
+
+public class Member {
+
+    private Long id;
+    private String name;
+    private Grade grade;
+
+    public Member(Long id, String name, Grade grade) {
+        this.id = id;
+        this.name = name;
+        this.grade = grade;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Grade grade) {
+        this.grade = grade;
+    }
+}
+
+```
+
+#### 회원 저장소
+
+##### MemberRepository.java - 회원 저장소 인터페이스
+
+* `src/main/java/hello/core1/member/MemberRepository.java`
+
+```java
+package hello.core1.member;
+
+public interface MemberRepository {
+
+    void save(Member member);
+
+    Member findById(Long memberId);
+}
+
+```
+
+##### MemoryMemberRepository.java - 메모리 회원 저장소 구현체
+
+* `src/main/java/hello/core1/member/MemoryMemberRepository.java`
+
+```java
+package hello.core1.member;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class MemoryMemberRepository implements MemberRepository {
+
+    private static Map<Long, Member> store = new HashMap<>();
+
+    @Override
+    public void save(Member member) {
+        store.put(member.getId(), member);
+    }
+
+    @Override
+    public Member findById(Long memberId) {
+        return store.get(memberId);
+    }
+}
+
+```
+
+데이터베이스가 아직 확정이 안되었다. 그래도 개발은 진행해야 하니 가장 단순한, 메모리 회원 저장소를 구현해서 우선 개발을 진행한다.
+
+> 참고    
+> `HashMap`은 동시성 이슈가 발생할 수 있다. 이런 경우 `ConcurrentHashMap`을 이용하자.
+
+#### 회원 서비스
+
+##### MemberService.java - 회원 서비스 인터페이스
+
+* `src/main/java/hello/core1/member/MemberService.java`
+
+```java
+package hello.core1.member;
+
+public interface MemberService {
+
+    void join(Member member);
+
+    Member findMember(Long memberId);
+}
+
+```
+
+##### MemberServiceImpl.java - 회원 서비스 구현체
+
+* `src/main/java/hello/core1/member/MemberServiceImpl.java`
+
+```java
+package hello.core1.member;
+
+public class MemberServiceImpl implements MemberService {
+
+    private final MemberRepository memberRepository = new MemoryMemberRepository();
+
+    @Override
+    public void join(Member member) {
+        memberRepository.save(member);
+    }
+
+    @Override
+    public Member findMember(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
+}
+
+```
 
 ## Note
