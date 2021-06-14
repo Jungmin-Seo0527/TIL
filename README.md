@@ -224,4 +224,76 @@ public class MemberServiceImpl implements MemberService {
 
 ```
 
+### 2-5. 회원 도메인 실행과 테스트
+
+#### MemberApp.java - 회원 가입 main
+
+* `src/main/java/hello/core1/MemberApp.java`
+
+```java
+package hello.core1;
+
+import hello.core1.member.Grade;
+import hello.core1.member.Member;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+
+public class MemberApp {
+
+    public static void main(String[] args) {
+        MemberService memberService = new MemberServiceImpl();
+        Member member = new Member(1L, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        Member findMember = memberService.findMember(1L);
+        System.out.println("member = " + member.getName());
+        System.out.println("findMember = " + findMember.getName());
+    }
+}
+
+```
+
+애플리케이션 로직으로 이렇게 테스트 하는 것은 좋은 방법이 아니다. JUnit 테스트를 사용하자.
+
+#### MemberServiceTest.java - 회원 가입 테스트
+
+* `src/test/java/hello/member/MemberServiceTest.java`
+
+```java
+package hello.member;
+
+import hello.core1.member.Grade;
+import hello.core1.member.Member;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class MemberServiceTest {
+
+    MemberService memberService = new MemberServiceImpl();
+
+    @Test
+    void join() {
+        // given
+        Member member = new Member(1L, "memberA", Grade.VIP);
+
+        // when
+        memberService.join(member);
+        Member findMember = memberService.findMember(1L);
+
+        // then
+        Assertions.assertThat(member).isEqualTo(findMember);
+    }
+}
+
+```
+
+#### 회원 도메인 설계의 문제점
+
+* 이 코드의 설계상 문제점은 무엇일까?
+* 다른 저장소로 변경할 때 OCP 원칙을 잘 준수할까?
+* DIP를 잘 지키고 있을까?
+* **의존관계가 인터페이스 뿐만 아니라 구현까지 모두 의존하는 문제점이 있음**
+
 ## Note
