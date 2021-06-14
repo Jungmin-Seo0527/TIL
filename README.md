@@ -260,7 +260,7 @@ public class MemberApp {
 * `src/test/java/hello/member/MemberServiceTest.java`
 
 ```java
-package hello.member;
+package hello.core1.member;
 
 import hello.core1.member.Grade;
 import hello.core1.member.Member;
