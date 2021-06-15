@@ -1049,4 +1049,61 @@ public class AppConfig {
 * `new MemoryMemberRepository()` 이 부분이 중복 제거 되었다. 이제 `MemoryMemberRepository`를 다른 구현체로 변경할 때 한 부분만 변경하면 된다.
 * `AppConfig`를 보면 역할과 구현 클래스가 한눈에 들어온다. 애플리케이션 전체 구성이 어떻게 되어있는지 빠르게 파악할 수 있다.
 
+### 3-5. 새로운 구조와 할인 정책 적용
+
+* 처음으로 돌아가서 정액 할인 정책을 정률% 할인 정책으로 변경해보자.
+* `FixDiscountPolicy` -> `RateDiscountPolicy`
+* 어떤 부분만 변경하면 될까?
+
+**`AppConfig`의 등장으로 애플리케이션이 크게 사용 영역과, 객체를 생성하고 구성(Configuration)하는 영역으로 분리되었다.**
+
+* 사용, 구성의 분리
+  ![](https://i.ibb.co/FXC70yB/bandicam-2021-06-15-10-53-05-172.jpg)
+
+* 할인 정책 변경
+  ![](https://i.ibb.co/N2Ysbc5/bandicam-2021-06-15-10-53-36-718.jpg)
+
+* `FixDiscountPolicy` -> `RateDiscountPolicy`로 변경해도 구성 영역만 영향을 받고, 사용 영역은 전혀 영향을 받지 않는다.
+
+#### AppConfig.java(수정) - 할인 정책 변경
+
+```java
+package hello.core1;
+
+import hello.core1.discount.DiscountPolicy;
+import hello.core1.discount.FixDiscountPolicy;
+import hello.core1.discount.RateDiscountPolicy;
+import hello.core1.member.MemberRepository;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+import hello.core1.member.MemoryMemberRepository;
+import hello.core1.order.OrderService;
+import hello.core1.order.OrderServiceImpl;
+
+public class AppConfig {
+
+    public MemberService memberService() {
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    private MemberRepository memberRepository() {
+        return new MemoryMemberRepository();
+    }
+
+    public OrderService orderService() {
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+
+    private DiscountPolicy discountPolicy() {
+        return new RateDiscountPolicy();
+    }
+}
+
+```
+
+* `AppConfig`에서 할인 정책 역할을 담당하는 구현을 `FixDiscountPolicy` -> `RateDiscountPolicy`객체로 변경했다.
+* 이제 할인 정책을 변경해도, 애플리케이션의 구성 역할을 담당했던 AppConfig만 변경하면 된다. 클라이언트 코드인 `OrderServiceImpl`를 포함해서 **사용 영역**의 어떤 코드도 변경할 필요가
+  없다.
+* **구성 영역**은 당연히 변경된다. 구성 역할을 담당하는 `AppConfig`를 애플리케이션이라는 공연의 기획자로 생각자하자. 공연 기획자는 공연 참여자인 구현 객체들을 모두 알아야 한다.
+
 ## Note
