@@ -1005,4 +1005,48 @@ class OrderServiceTest {
 * 이제 각 배우들은 담당 기능을 실행하는 책임만 지면 된다.
 * `OrderServiceImpl`은 기능을 실행하는 책임만 지면 된다.
 
+### 3-4. AppConfig 리팩터링
+
+현재 `AppConfig`를 보면 중복이 있고, 역할에 따른 구현이 잘 안보인다.
+
+![](https://i.ibb.co/PFqdWTd/bandicam-2021-06-15-10-41-07-174.jpg)
+
+#### AppConfig.java(수정) - 리팩터링
+
+```java
+package hello.core1;
+
+import hello.core1.discount.DiscountPolicy;
+import hello.core1.discount.FixDiscountPolicy;
+import hello.core1.member.MemberRepository;
+import hello.core1.member.MemberService;
+import hello.core1.member.MemberServiceImpl;
+import hello.core1.member.MemoryMemberRepository;
+import hello.core1.order.OrderService;
+import hello.core1.order.OrderServiceImpl;
+
+public class AppConfig {
+
+    public MemberService memberService() {
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    private MemberRepository memberRepository() {
+        return new MemoryMemberRepository();
+    }
+
+    public OrderService orderService() {
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+
+    private DiscountPolicy discountPolicy() {
+        return new FixDiscountPolicy();
+    }
+}
+
+```
+
+* `new MemoryMemberRepository()` 이 부분이 중복 제거 되었다. 이제 `MemoryMemberRepository`를 다른 구현체로 변경할 때 한 부분만 변경하면 된다.
+* `AppConfig`를 보면 역할과 구현 클래스가 한눈에 들어온다. 애플리케이션 전체 구성이 어떻게 되어있는지 빠르게 파악할 수 있다.
+
 ## Note
