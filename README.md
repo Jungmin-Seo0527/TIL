@@ -2033,7 +2033,8 @@ public class SingletonTest {
 
 ### 5-4. 싱글톤 방식의 주의점
 
-* 싱글톤 패턴이든, 스프링 같은 싱글톤 컨테이너를 사용하든, 객체 인스턴스를 하나만 생성해서 공유하는 싱글톤 방식은 여러 클라이언트가 하나의 같은 객체 인스턴스를 공유하기 때문에 싱글톤 객체는 상태를 유지(stateful)하게 설계하면 안된다.
+* 싱글톤 패턴이든, 스프링 같은 싱글톤 컨테이너를 사용하든, 객체 인스턴스를 하나만 생성해서 공유하는 싱글톤 방식은 여러 클라이언트가 하나의 같은 객체 인스턴스를 공유하기 때문에 싱글톤 객체는 상태를 유지(
+  stateful)하게 설계하면 안된다.
 * 무상태(stateless)로 설계해야 한다.
     * 특정 클라이언트에 의존적인 필드가 있으면 안된다.
     * 특정 클라이언트가 값을 변경할 수 있는 필드가 있으면 안된다.
@@ -2116,5 +2117,169 @@ public class StatefulServiceTest {
 * 사용자A의 주문금액은 10000원이 되어야 하는데, 20000원이라는 결과가 나왔다.
 * 실무에서 이런 경우를 종종 보는데, 이로인해 정말 해결하기 어려운 큰 문제들이 터진다.
 * 진짜 공유필드는 조심해야 한다! 스프링 빈은 항상 무상태(stateless)로 설계하자.
+
+### 5-5. @Configuration과 싱글톤
+
+`AppConfig.java` 코드를 살펴보자
+
+```java
+
+@Configuration
+public class AppConfig {
+    @Bean
+    public MemberService memberService() {
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    @Bean
+    public OrderService orderService() {
+        return new OrderServiceImpl(
+                memberRepository(),
+                discountPolicy());
+    }
+
+    @Bean
+    public MemberRepository memberRepository() {
+        return new MemoryMemberRepository();
+    }
+ ...
+}
+```
+
+* `memberService`빈을 만드는 코드를 보면 `memberRepository()`를 호출한다.
+    * 이 메서드를 호출하면 `new MemoryMemberRepository()`를 호출한다.
+
+* `orderService` 빈을 만드는 코드도 동일하게 `memberRepository()`를 호출한다.
+    * 이 메서드를 호출하면 `new MemroyMemberRepository()`를 호출한다.
+
+결과적으로 각각 다른 2개의 `MomoryMemberRepository`가 생성되면서 싱글톤이 깨지는 것 처럼 보인다. 스프링 컨테이너는 이 문제를 어떻게 해결할까?
+
+#### MemberServiceImpl.java, OrderServiceImpl.java - 검증 용도 코드 추가
+
+```java
+public class MemberServiceImpl implements MemberService {
+    private final MemberRepository memberRepository;
+
+    //테스트 용도
+    public MemberRepository getMemberRepository() {
+        return memberRepository;
+    }
+}
+
+public class OrderServiceImpl implements OrderService {
+    private final MemberRepository memberRepository;
+
+    //테스트 용도
+    public MemberRepository getMemberRepository() {
+        return memberRepository;
+    }
+}
+```
+
+#### ConfigurationSingletonTest.java - 테스트 코드
+
+* `src/test/java/hello/core1/singleton/ConfigurationSingletonTest.java`
+
+```java
+package hello.core1.singleton;
+
+import hello.core1.AppConfig;
+import hello.core1.member.MemberRepository;
+import hello.core1.member.MemberServiceImpl;
+import hello.core1.order.OrderServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import static org.assertj.core.api.Assertions.*;
+
+public class ConfigurationSingletonTest {
+
+    @Test
+    void configurationTest() {
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
+        OrderServiceImpl orderService = ac.getBean("orderService", OrderServiceImpl.class);
+        MemberRepository memberRepository = ac.getBean("memberRepository", MemberRepository.class);
+
+        MemberRepository memberRepository1 = memberService.getMemberRepository();
+        MemberRepository memberRepository2 = orderService.getMemberRepository();
+
+        System.out.println("memberService -> memberRepository1 = " + memberRepository1);
+        System.out.println("orderService -> memberRepository2 = " + memberRepository2);
+        System.out.println("memberRepository = " + memberRepository);
+
+        assertThat(memberService.getMemberRepository()).isSameAs(memberRepository);
+        assertThat(orderService.getMemberRepository()).isSameAs(memberRepository);
+    }
+}
+
+```
+
+* 확인해보면 `memberRepository`인스턴스는 모두 같은 인스턴스가 공유되어 사용된다.
+* `AppConfig`의 자바 코드를 보면 분명히 각각 2번 `new MemoryMemberRepository`호출해서 다른 인스턴스가 생성되어야 하는데?
+* 어떻게 된 일일까? 혹시 두 번 호출이 안되는 것일까? 실험을 통해 알아보자.
+
+#### AppConfig.java(추가) - 호출 로그 남김
+
+```java
+package hello.core;
+
+import hello.core.discount.DiscountPolicy;
+import hello.core.discount.RateDiscountPolicy;
+import hello.core.member.MemberRepository;
+import hello.core.member.MemberService;
+import hello.core.member.MemberServiceImpl;
+import hello.core.member.MemoryMemberRepository;
+import hello.core.order.OrderService;
+import hello.core.order.OrderServiceImpl;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+    @Bean
+    public MemberService memberService() {
+        //1번
+        System.out.println("call AppConfig.memberService");
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    @Bean
+    public OrderService orderService() {
+        //1번
+        System.out.println("call AppConfig.orderService");
+        return new OrderServiceImpl(
+                memberRepository(),
+                discountPolicy());
+    }
+
+    @Bean
+    public MemberRepository memberRepository() { //2번? 3번?
+        System.out.println("call AppConfig.memberRepository");
+        return new MemoryMemberRepository();
+    }
+
+    @Bean
+    public DiscountPolicy discountPolicy() {
+        return new RateDiscountPolicy();
+    }
+}
+```
+
+스프링 컨테이너가 각각 @Bean을 호출해서 스프링 빈을 생성한다. 그래서 `memberRepository()`는 다음과 같이 총 3번이 호출되어야 하는 것 아닐까?
+
+1. 스프링 컨테이너가 스프링 빈에 등록하기 위해 @Bean이 붙어있는 `memberRepository()`호출
+2. `memberService()`로직에서 `memberRepository()`호출
+3. `orderService()`로직에서 `ememberRepository()`호출
+
+그런테 출력 결과는 모두 1번만 호출된다.
+
+```
+call AppConfig.memberService
+call AppConfig.memberRepository
+call AppConfig.orderService
+```
 
 ## Note
