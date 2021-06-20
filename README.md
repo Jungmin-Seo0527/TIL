@@ -341,4 +341,49 @@ public class OrderServiceImpl implements OrderService {
 > 정리       
 > 최근에는 생성자를 딱 1개 두고, `@Autowired`를 생략하는 방법을 주로 사용한다. 여기에 Lombok 라이브러리의 `@RequiredConstructor`함께 사용하면 기능은 다 제공하면서, 코드는 깔끔하게 사용할 수 있다.
 
+### 7-5. 조회 빈이 2개 이상 - 문제
+
+`@Autowired`는 타입(Type)으로 조회한다.
+
+```
+@Autowired
+pricate DiscountPolicy discountPolicy
+```
+
+타입으로 조회하기 때문에, 마치 다음 코드와 유사하게 동작한다.(실제로는 더 많은 기능을 제공한다.)
+`ac.getBean(DiscountPolicy.class)`
+
+스프링 빈 조회에서 학습했듯이 타입으로 조회하면 선택된 빈이 2개 이상일 때 문제가 발생한다.    
+`DiscountPolicy`의 하위 타입인 `FixDiscountPolicy`, `RateDiscountPolicy`둘다 스프링 빈으로 선언해보자.
+
+```
+@Component
+public class FixDiscountPolicy implements DiscountPolicy{}
+```
+
+```
+@Component
+public class RateDiscountPolicy implements DiscountPolicy{}
+```
+
+그리고 이렇게 의존관계 자동 주입을 실행하면
+
+```
+@Autowired
+private DiscountPolicy discountPolicy
+```
+
+`NoUniqeBeanDefinitionException`오류가 발생한다.
+
+```
+NoUniqueBeanDefinitionException: No qualifying bean of type 
+'hello.core1.discount.DiscountPolicy' available: expected single matching bean 
+but found 2: fixDiscountPolicy,rateDiscountPolicy
+```
+
+오류 메시지가 친절하게도 하나의 빈을 기대했는데 `fixDiscountPolicy`, `rateDiscountPolicy` 2개가 발견되었다고 알려준다.
+
+이때 하위 타입으로 지정할 수 도 있지만, 하위 타입으로 지정하는 것은 DIP를 위배하고 유연성이 떨어진다. 그리고 이름만 다르고, 완전히 똑같은 타입의 스프링 빈이 2개 있을 때 해결이 안된다.   
+스프링 빈을 수동 등록해서 문제를 해결해도 되자만, 의존 관계 자동 주입에서 해결하는 여러 방법이 있다.
+
 ## Note
