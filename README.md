@@ -3140,4 +3140,45 @@ public class OrderServiceImpl implements OrderService {
 * 기본으로 생성자 주입을 사용하고, 필수 값이 아닌 경우에는 수정자 주입 방식을 옵션으로 부여하면 된다. 생성자 주입과 수정자 주입을 동시에 사용할 수 있다.
 * 항상 생성자 주입을 선택해라! 그리고 가끔 옵션이 필요하면 수정자 주입을 선택해라. 필드 주입은 사용하지 않는게 좋다.
 
+### 7-4. 롬복과 최신 트랜드
+
+막상 개발을 해보면, 대부분이 다 불변이고, 그래서 다음과 같이 생성자에 final 키워드를 사용하게 된다. 그런데 생성자도 만들어야 하고, 주입 받는 값을 대입하는 코드도 만들어야 하고...     
+필드 주입처럼 좀 편리하게 사용하는 방법은 없을까?
+
+#### OrderServiceImpl.java (수정) - @Autowired 생략
+
+* 생성자가 딱 1개만 있으면 `@Autowired`를 생략할 수 있다.
+
+```java
+
+@Component
+public class OrderServiceImpl implements OrderService {
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy
+            discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+}
+```
+
+* 이제 롬복을 적용해보자.
+* 롬복 라이브러리가 제공하는 `@RequiredArgsConstructor`기능을 사용하면 final이 붙은 필드를 모아서 생성자를 자동으로 만들어준다. (다음 코드에는 보이지 않지만 실제 호출 가능하다.)
+* 최종 결과는 다음과 같다.
+
+```java
+
+@Component
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+}
+```
+
+> 정리       
+> 최근에는 생성자를 딱 1개 두고, `@Autowired`를 생략하는 방법을 주로 사용한다. 여기에 Lombok 라이브러리의 `@RequiredConstructor`함께 사용하면 기능은 다 제공하면서, 코드는 깔끔하게 사용할 수 있다.
+
 ## Note
