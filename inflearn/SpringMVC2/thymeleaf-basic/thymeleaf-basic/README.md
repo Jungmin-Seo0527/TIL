@@ -33,3 +33,137 @@
     * JSP: JSP 소스코드와 HTML이 섞여 있어서 웹 브라우저에서는 정상적인 HTML결과 확인이 어렵다.(서버를 통해 JSP를 렌더링 하는 과정이 필요)
     * 타임리프: 작성된 파일을 그대로 웹 브라우저에서 열어도 정상적인 HTML 결과 확인 가능
     * **순수 HTML을 그대로 유지하면서 뷰 템플릿도 사용할 수 있는 타임리프의 특징을 네츄럴 템플릿이라 한다.**
+
+### 1-3. 텍스트 - text, utext
+
+#### 가장 기본적인 텍스트 출력 방식
+
+* `th:text`사용
+    * `<span th:text="${data}">`
+    * HTML 테그의 속성에 기능을 정의해서 동작
+* 직접 데이터 출력
+    * `[[${data}]]`
+
+##### BasicController.java
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/java/hello/thymeleafbasic/basic/BasicController.java`
+
+```java
+package hello.thymeleafbasic.basic;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping
+public class BasicController {
+
+    @GetMapping("basic/text-basic")
+    public String textBasic(Model model) {
+        model.addAttribute("data", "Hello <b>Spring!</b>");
+        return "basic/text-basic";
+    }
+}
+```
+
+##### text-basic.html
+
+* inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/text-basic.html
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org>">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>컨텐츠에 데이터 출력하기</h1>
+<ul>
+    <li>th:text 사용 <span th:text="${data}"></span></li>
+    <li>컨텐츠 안에서 직접 출력하기 = [[${data}]]</li>
+</ul>
+</body>
+</html>
+```
+
+#### Escape
+
+* html에서 `<`, `>`와 같은 특수 문자를 출력하기 위한 방법
+* 웹 브라우저: `Hello <b>Spring!</b>`(`Spring!`문자열이 굵게 나오기를 의도)
+* 소스코드: `Hello %lt;b&gt;Spring!&lt;/b&gt;`(위의 문자열이 변환)
+    * `<` -> `&lt`
+
+##### HTML 엔티티
+
+* HTML 엔티티
+    * 웹 브라우저가 `<`를 태그가 아닌 문자로 표현하는 방법
+    * Escape: 특수문자 -> HTML 엔티티
+    * `th:text`, `[[...]]`는 **기본적으로 escape을 제공한다.**
+        * `<` -> `&lt;`
+        * `>` -> `&gt;`
+        * 등등...
+
+#### Unescape
+
+* excape기능을 사용하지 않는 방법
+    * `th:text` -> `th:utext`
+    * `[[...]]` -> `[(...)]`
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping
+public class BasicController {
+
+    // ...
+
+    @GetMapping("basic/text-unescaped")
+    public String textUnescaped(Model model) {
+        model.addAttribute("data", "Hello <b>Spring!</b>");
+        return "basic/text-unescaped";
+    }
+}
+```
+
+##### text-unescape.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/text-unescaped.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org>">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>text vs utext</h1>
+<ul>
+    <li>th:text = <span th:text="${data}"></span></li>
+    <li>th:utext = <span th:utext="${data}"></span></li>
+</ul>
+
+<h1><span th:inline="none">[[...]] vs [(...)]</span></h1>
+<ul>
+    <li><span th:inline="none">[[...]] = </span>[[${data}]]</li>
+    <li><span th:inline="none">[(...)] = </span>[(${data})]</li>
+</ul>
+
+</body>
+</html>
+```
+
+* 웹 브라우저: Hello **Spring!**
+* 소스 보기: `Hello <b>Spring!</b>`
+* 기본적으로 escape을 사용하고 꼭 필요할 때만 unescape을 사용
