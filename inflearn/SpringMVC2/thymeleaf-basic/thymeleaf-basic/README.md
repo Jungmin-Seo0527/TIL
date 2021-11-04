@@ -167,3 +167,79 @@ public class BasicController {
 * 웹 브라우저: Hello **Spring!**
 * 소스 보기: `Hello <b>Spring!</b>`
 * 기본적으로 escape을 사용하고 꼭 필요할 때만 unescape을 사용
+
+### 1-4. 변수 - SpringEL
+
+#### 변수 표현식: `${...}`
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping
+public class BasicController {
+
+    // ...
+
+    @GetMapping("basic/variable")
+    public String variable(Model model) {
+        User userA = new User("userA", 10);
+        User userB = new User("userB", 20);
+
+        List<User> list = new ArrayList<>();
+        list.add(userA);
+        list.add(userB);
+
+        Map<String, User> map = new HashMap<>();
+        map.put("userA", userA);
+        map.put("userB", userB);
+
+        model.addAttribute("user", userA);
+        model.addAttribute("users", list);
+        model.addAttribute("userMap", map);
+
+        return "basic/variable";
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class User {
+        private String username;
+        private int age;
+    }
+
+}
+```
+
+##### variable.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/variable.html`
+
+#### SpringEL 다양한 표현식 사용
+
+* Object
+    * `user.username`: 프로퍼티 접근 (`user.getUsername()`)
+    * `user['username']`: 위와 같음(`user.getUsername()`)
+    * `user.getUsername()`: user의 `getUsername()`직접 호출
+* List
+    * `user[0].username`: List에서 첫번째 회원을 찾고 프로퍼티 접근 (`list.get(0).getUsername()`)
+    * `users[0]['username`]: 위와 같음
+    * `users[0].getUsername()`: 직접 호출
+* Map
+    * `userMap['userA'].username`: 프로퍼티 접근 (`map.get("userA").getUsername()`)
+    * `userMap['userA']['username]`: 위와 같음
+    * `userMap['userA'].getUsername()`: 직접 호출
