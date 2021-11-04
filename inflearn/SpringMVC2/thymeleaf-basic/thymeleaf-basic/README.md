@@ -243,3 +243,103 @@ public class BasicController {
     * `userMap['userA'].username`: 프로퍼티 접근 (`map.get("userA").getUsername()`)
     * `userMap['userA']['username]`: 위와 같음
     * `userMap['userA'].getUsername()`: 직접 호출
+
+#### 지역 변수 선언
+
+* `th:with`를 이용해 지역변수 선언 가능
+* 지역변수는 선언한 테그 안에서만 사용 가능
+
+```html
+
+<div th:with="first=${users[0]}">
+    <p>처음 사람의 이름은 <span th:text="${first.username}"></span></p>
+</div>
+```
+
+### 1-5. 기본 객체들
+
+* `${#request}`
+* `${#response}`
+* `${#session}`: 세션 접근
+    * 예) `${session.sessionData}`
+* `${#servletContext}`
+* `${#locale}`
+* `${#param}`
+    * `#request`는 `HttpServletRequest`객체가 그대로 제공
+    * 접근법이 불편함(`request.getParameter("data")`)
+    * 이점을 해결하기 위한 객체(`${#param.paramData}`)
+* `@`: 스프링 빈 접근
+    * 예)`${@!helloBean.hello('Spring!')}`
+
+> 세션은 이후 배울 예정    
+> `Facade`패턴...???
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/basic-objects")
+    public String basicObjects(HttpSession session) {
+        session.setAttribute("sessionData", "Hello Session");
+        return "basic/basic-objects";
+    }
+
+    @Component("helloBean")
+    static class HelloBean {
+        public String hello(String data) {
+            return "Hello " + data;
+        }
+    }
+}
+```
+
+##### basic-objects.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/basic-objects.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>식 기본 객체 (Expression Basic Objects)</h1>
+<ul>
+    <li>request = <span th:text="${#request}"></span></li>
+    <li>response = <span th:text="${#response}"></span></li>
+    <li>session = <span th:text="${#session}"></span></li>
+    <li>servletContext = <span th:text="${#servletContext}"></span></li>
+    <li>locale = <span th:text="${#locale}"></span></li>
+</ul>
+<h1>편의 객체</h1>
+<ul>
+    <li>Request Parameter = <span th:text="${param.paramData}"></span></li>
+    <li>session = <span th:text="${session.sessionData}"></span></li>
+    <li>spring bean = <span th:text="${@helloBean.hello('Spring!')}"></span></li>
+</ul>
+</body>
+</html>
+```
