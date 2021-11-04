@@ -343,3 +343,102 @@ public class BasicController {
 </body>
 </html>
 ```
+
+### 1-6. 유틸리티 객체와 날짜
+
+#### 타임리프 유틸리티 객체들
+
+* `#message`: 메시지, 국제화 처리
+* `#uris`: URI 이스케이프 지원
+* `#dates`: `java.util.Date`서식 지원
+* `#calendars`: `java.util.Calendar`서식 지원
+* `#temporals`: 자바8 날짜 서식 지원
+* `#numbers`: 숫자 서식 지원
+* `#strings`: 문자 관련 편의 기능
+* `#objects`: 객체 관련 기능 제공
+* `#bools`: boolean관련 기능 제공
+* `#arrays`: 배열 관련 기능 제공
+* `#lists`, `#sets`, `#maps`: 컬렉션 관련 기능 제공
+* `#ids`: 아이디 처리 관련 기능 제공(뒤에서 설명)
+* [타임리프 유틸리티 객체](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#expression-utility-objects)
+  , [유틸리티 객체 예시](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#appendix-b-expression-utility-objects)
+
+#### 자바8 날짜
+
+* 타임리프에서 자바8 날짜인 `LocalDate`, `LocalDateTime`, `Instant`를 사용하려면 추가 라이브러 필요
+* 스프링 부트 타임리프를 사용하면 해당 라이브러리(`thymeleaf-extras-java8time`) 자동 추가
+* `#temporals`: 자바8 날짜용 유틸리티 객체
+    * `<span th:text="${#temporals.format(localDateTime, 'yyyy-MM-dd HH:mm:ss`)}"></span>`
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/date")
+    public String date(Model model) {
+        model.addAttribute("localDateTime", LocalDateTime.now());
+        return "basic/date";
+    }
+}
+```
+
+##### date.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/date.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>LocalDateTime</h1>
+<ul>
+    <li>default = <span th:text="${localDateTime}"></span></li>
+    <li>yyyy-MM-dd HH:mm:ss = <span th:text="${#temporals.format(localDateTime, 'yyyy-MM-dd HH:mm:ss')}"></span></li>
+</ul>
+<h1>LocalDateTime - Utils</h1>
+<ul>
+    <li>${#temporals.day(localDateTime)} = <span th:text="${#temporals.day(localDateTime)}"></span></li>
+    <li>${#temporals.month(localDateTime)} = <span th:text="${#temporals.month(localDateTime)}"></span></li>
+    <li>${#temporals.monthName(localDateTime)} = <span th:text="${#temporals.monthName(localDateTime)}"></span></li>
+    <li>${#temporals.monthNameShort(localDateTime)} = <span
+            th:text="${#temporals.monthNameShort(localDateTime)}"></span></li>
+    <li>${#temporals.year(localDateTime)} = <span th:text="${#temporals.year(localDateTime)}"></span></li>
+    <li>${#temporals.dayOfWeek(localDateTime)} = <span th:text="${#temporals.dayOfWeek(localDateTime)}"></span></li>
+    <li>${#temporals.dayOfWeekName(localDateTime)} = <span th:text="${#temporals.dayOfWeekName(localDateTime)}"></span>
+    </li>
+    <li>${#temporals.dayOfWeekNameShort(localDateTime)} = <span
+            th:text="${#temporals.dayOfWeekNameShort(localDateTime)}"></span></li>
+    <li>${#temporals.hour(localDateTime)} = <span th:text="${#temporals.hour(localDateTime)}"></span></li>
+    <li>${#temporals.minute(localDateTime)} = <span th:text="${#temporals.minute(localDateTime)}"></span></li>
+    <li>${#temporals.second(localDateTime)} = <span th:text="${#temporals.second(localDateTime)}"></span></li>
+    <li>${#temporals.nanosecond(localDateTime)} = <span th:text="${#temporals.nanosecond(localDateTime)}"></span></li>
+</ul>
+</body>
+</html>
+```
