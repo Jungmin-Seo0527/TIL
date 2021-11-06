@@ -765,3 +765,109 @@ public class BasicController {
     * `th:checked`
         * `false`인 경우 `checked`속성 자체를 제거
         * `<input type="checkbox" name="active" th:checked="false" />` -> `<input type="checkbox" name="active" />`
+
+### 1-11. 반복
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    private void addUsers(Model model) {
+        List<User> list = new ArrayList<>();
+        list.add(new User("UserA", 10));
+        list.add(new User("UserB", 20));
+        list.add(new User("UserC", 30));
+
+        model.addAttribute("users", list);
+    }
+}
+```
+
+##### each.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/each.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>기본 테이블</h1>
+<table border="1">
+    <tr>
+        <th>username</th>
+        <th>age</th>
+    </tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}">username</td>
+        <td th:text="${user.age}">0</td>
+    </tr>
+</table>
+<h1>반복 상태 유지</h1>
+<table border="1">
+    <tr>
+        <th>count</th>
+        <th>username</th>
+        <th>age</th>
+        <th>etc</th>
+    </tr>
+    <tr th:each="user, userStat : ${users}">
+        <td th:text="${userStat.count}">username</td>
+        <td th:text="${user.username}">username</td>
+        <td th:text="${user.age}">0</td>
+        <td>
+            index = <span th:text="${userStat.index}"></span>
+            count = <span th:text="${userStat.count}"></span>
+            size = <span th:text="${userStat.size}"></span>
+            even? = <span th:text="${userStat.even}"></span>
+            odd? = <span th:text="${userStat.odd}"></span>
+            first? = <span th:text="${userStat.first}"></span>
+            last? = <span th:text="${userStat.last}"></span>
+            current = <span th:text="${userStat.current}"></span>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
+```
+
+* 반복 기능: `<tr th:each="user : ${users}">`
+    * 반복시 오른쪽 컬렉션(`${users}`)의 값을 하나씩 꺼내서 왼쪽 변수(`user`)에 담아서 태그를 반복실행한다.
+    * `th:each`는 `List`뿐만 아니라 배열, `java.util.Iterable`, `java.util.Enumeration`을 구현한 모든 객체를 반복에 사용할 수 있다.
+    * `Map`은 `Map.Entry`형태로 담긴다.
+* 반복 상태 유지: `<tr th:each="user, userStat : ${users}">`
+    * 반복의 두번째 파라미터를 설정해서 반복의 상태를 확인
+    * 두번째 파라미터는 생략 가능
+        * 생략하면 지정한 변수명(`user`) + `State`가 된다.
+* 반복 상태 유지 가능
+    * `index`: 0부터 시작하는 값
+    * `count`: 1부터 시작하는 값
+    * `size`: 전체 사이즈
+    * `even`, `odd`: 홀수, 짝수 여부(`boolean`)
+    * `first`, `last`: 처음, 마지막 여부(`boolean`)
+    * `current`: 현재 객체
