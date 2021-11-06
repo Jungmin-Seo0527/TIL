@@ -1044,3 +1044,78 @@ public class BasicController {
     * HTML 파일을 웹 브라우저에서 그대로 열어보면 렌덜이 하지 않음(HTML 주석이기 때문)
     * 타임리프 렌더링을 거치면 정상 렌더링
     * 즉 렌더링 한 경우에만 보이고 HTML 파일을 그대로 열면 주석처리가 된다.
+
+### 1-14. 블록
+
+* `<th:block>`: HTML 태그가 아닌 타임리프의 유일한 자체 태그
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/block")
+    public String block(Model model) {
+        addUsers(model);
+        return "basic/block";
+    }
+}
+```
+
+##### block.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/block.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<th:block th:each="user : ${users}">
+    <div>
+        사용자 이름1 <span th:text="${user.username}"></span>
+        사용자 나이1 <span th:text="${user.age}"></span>
+    </div>
+    <div>
+        요약 <span th:text="${user.username} + ' / ' + ${user.age}"></span>
+    </div>
+</th:block>
+</body>
+</html>
+```
+
+###### 결과
+
+```html
+
+<div>
+    사용자 이름1 <span>userA</span>
+    사용자 나이1 <span>10</span>
+</div>
+<div>
+    요약 <span>userA / 10</span>
+</div>
+<div>
+    사용자 이름1 <span>userB</span>
+    사용자 나이1 <span>20</span>
+</div>
+<div>
+    요약 <span>userB / 20</span>
+</div>
+<div>
+    사용자 이름1 <span>userC</span>
+    사용자 나이1 <span>30</span>
+</div>
+<div>
+    요약 <span>userC / 30</span>
+</div>
+```
