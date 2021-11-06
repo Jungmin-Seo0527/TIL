@@ -1119,3 +1119,157 @@ public class BasicController {
     요약 <span>userC / 30</span>
 </div>
 ```
+
+### 1-15. 자바스크립트 인라인
+
+> 복습 요망
+
+* `<script th:inline="javascript">`
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/block")
+    public String block(Model model) {
+        addUsers(model);
+        return "basic/block";
+    }
+
+    @GetMapping("/javascript")
+    public String javascript(Model model) {
+        model.addAttribute("user", new User("UserA", 10));
+        addUsers(model);
+        return "basic/javascript";
+    }
+}
+```
+
+##### javascript.html
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- 자바스크립트 인라인 사용 전 -->
+<script>
+     var username = [[${user.username}]];
+     var age = [[${user.age}]];
+
+     //자바스크립트 내추럴 템플릿
+     var username2 = /*[[${user.username}]]*/ "test username";
+
+     //객체
+     var user = [[${user}]];
+</script>
+
+<!-- 자바스크립트 인라인 사용 후 -->
+<script th:inline="javascript">
+     var username = [[${user.username}]];
+     var age = [[${user.age}]];
+
+     //자바스크립트 내추럴 템플릿
+     var username2 = /*[[${user.username}]]*/ "test username";
+
+     //객체
+     var user = [[${user}]];
+</script>
+
+<!-- 자바스크립트 인라인 each -->
+<script th:inline="javascript">
+     [# th:each="user, stat : ${users}"]
+     var user[[${stat.count}]] = [[${user}]];
+     [/]
+</script>
+
+</body>
+</html>
+```
+
+###### 자바스크립트 인라인 사용 전 - 결과
+
+```
+<script>
+  var username = userA;
+  var age = 10;
+  
+  //자바스크립트 내추럴 템플릿
+  var username2 = /*userA*/ "test username";
+  
+  //객체
+  var user = BasicController.User(username=userA, age=10);
+</script>
+```
+
+###### 자바스크립트 인라인 사용 후 - 결과
+
+```
+<script>
+  var username = "userA";
+  var age = 10;
+  
+  //자바스크립트 내추럴 템플릿
+  var username2 = "userA";
+  
+  //객체
+  var user = {"username":"userA","age":10};
+</script>
+```
+
+#### 텍스트 렌더링
+
+* `var username = [[${user.username}]];`
+    * 인라인 사용 전: `var username = userA`
+        * 기대한 것은 `userA`라는 문자열이지만, `userA`가 변수명으로 사용되어서 자바스크립트 오류 발생
+    * 인라인 사용 후: `var username = "userA";`
+        * `userA`를 문자열로 인식
+
+#### 자바스크립트 내추럴 템플릿
+
+* 타임리프는 HTML 파일을 직접 열어도 동작하는 내추럴 템플릿 기능 제공
+
+* `var username2 = /*[[${user.username}]]*/ "test username";`
+    * 인라인 사용 전: `var username2 = /*userA*/ "test username";`
+        * 렌더링 내용이 주석처리 되버림
+    * 인라인 사용 후: `var username2 = "userA"`
+
+#### 객체
+
+* 인라인 기능은 객체를 JSON으로 자동 변환 해준다.
+* `var user = [[${user}]];`
+    * 인라인 사용 전: `var user = BasicController.User(username=userA, age=10);`
+        * `toString()`호출값
+    * 인라인 사용 후: `var user = {"username":"userA", "age":10};`
+        * JSON으로 변환
+
+#### 자바스크립트 인라인 each
+
+```
+<!-- 자바스크립트 인라인 each -->
+<script th:inline="javascript">
+   [# th:each="user, stat : ${users}"]
+   var user[[${stat.count}]] = [[${user}]];
+   [/]
+</script>
+```
+
+결과
+
+```
+<script>
+var user1 = {"username":"userA","age":10};
+var user2 = {"username":"userB","age":20};
+var user3 = {"username":"userC","age":30};
+</script>
+```
