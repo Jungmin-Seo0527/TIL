@@ -688,3 +688,80 @@ public class BasicController {
     * `!=`: neq, ne
 * No-Operation
     * `_`인 경우 타임리프가 실행하지 않는 것 처럼 동작
+
+### 1-10. 속성 값 설정
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/attribute")
+    public String attribute() {
+        return "basic/attribute";
+    }
+}
+```
+
+##### attribute.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/attribute.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>속성 설정</h1>
+<input type="text" name="mock" th:name="userA"/>
+<h1>속성 추가</h1>
+- th:attrappend = <input type="text" class="text" th:attrappend="class=' large'"/><br/>
+- th:attrprepend = <input type="text" class="text" th:attrprepend="class='large '"/><br/>
+- th:classappend = <input type="text" class="text" th:classappend="large"/><br/>
+<h1>checked 처리</h1>
+- checked o <input type="checkbox" name="active" th:checked="true"/><br/>
+- checked x <input type="checkbox" name="active" th:checked="false"/><br/>
+- checked=false <input type="checkbox" name="active" checked="false"/><br/>
+</body>
+</html>
+```
+
+* 속성 설정
+    * `th:*`속성을 지정하면 타임리프는 기존 속성을 `th:*`로 지정한다.
+    * 기존 속성이 없으면 새로 만든다.
+    * `<input type="text" name="mock" th:name="userA"/>` -> `<input type="text" name="userA" />`
+* 속성 추가
+    * `th:attrappend`: 속성 값의 뒤에 값을 추가한다.
+    * `th:attrprepend`: 속성 값의 앞에 값을 추가한다.
+    * `th:classappend`: class 속성에 자연스럽게 추가한다.
+* checked 처리
+    * `<input type="checkbox" name="active" checked="false" />`
+    * 위 경우에도 checked속성이 있기 때문에 chcked 처리가 되어 버린다.(값에 상관없이 존재만 하면 체크)
+        * 이때문에 true, false 값을 주어야 하는 경우 불편함
+    * `th:checked`
+        * `false`인 경우 `checked`속성 자체를 제거
+        * `<input type="checkbox" name="active" th:checked="false" />` -> `<input type="checkbox" name="active" />`
