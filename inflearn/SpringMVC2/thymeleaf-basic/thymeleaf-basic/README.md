@@ -964,3 +964,83 @@ public class BasicController {
     * `<span th:text="'미성년자'" th:if="${user.age lt 20}"></span>`
 * switch
     * `*`은 만족하는 조건이 없을 때 사용하는 디폴트이다.
+
+### 1-13. 주석
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/comments")
+    public String comments(Model model) {
+        model.addAttribute("data", "Spring!");
+        return "basic/comments";
+    }
+}
+```
+
+##### comments.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/comments.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>예시</h1>
+<span th:text="${data}">html data</span>
+<h1>1. 표준 HTML 주석</h1>
+<!--
+<span th:text="${data}">html data</span>
+-->
+<h1>2. 타임리프 파서 주석</h1>
+<!--/* [[${data}]] */-->
+
+<!--/*-->
+<span th:text="${data}">html data</span>
+<!--*/-->
+
+<h1>3. 타임리프 프로토타입 주석</h1>
+<!--/*/
+<span th:text="${data}">html data</span>
+/*/-->
+
+</body>
+</html>
+```
+
+* 표준 HTML 주석: `<!-- ... -->`
+    * 타임리프가 렌더링 하지 않고, 그대로 남겨둔다.
+* 타임리프 파서 주석: `<!--/* ... */-->`
+    * 타임리프의 진짜 주석
+    * 렌더링에서 주석 부분 제거
+* 타임리프 프로토타입 주석
+    * HTML 파일을 웹 브라우저에서 그대로 열어보면 렌덜이 하지 않음(HTML 주석이기 때문)
+    * 타임리프 렌더링을 거치면 정상 렌더링
+    * 즉 렌더링 한 경우에만 보이고 HTML 파일을 그대로 열면 주석처리가 된다.
