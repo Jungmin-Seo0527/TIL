@@ -518,3 +518,78 @@ public class BasicController {
     * 경로 변수와 쿼리 파라미터를 함께 사용할 수 있다.
 * 절대 경로: `/hello`
 * 상대 경로: `hello`
+
+### 1-8. 리터럴 Literals
+
+#### 리터럴
+
+* 소스 코드상에 고정된 값
+    * 예) `String a = "Hello`, `int a = 10 * 20`
+* 타임리프의 리터럴: 문자, 숫자, 불린(true, false), null
+* 타임리프에서 문자 리터럴은 `'`(작은 따움표)로 감싸야 한다.
+    * `<span th:text="'hello'"`>
+    * 공백이 없는 문자열은 작은 따옴표 생략 가능
+
+##### BasicController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/basic")
+public class BasicController {
+
+    // ...
+
+    @GetMapping("/literal")
+    public String literal(Model model) {
+        model.addAttribute("data", "Spring!");
+        return "basic/literal";
+    }
+}
+```
+
+##### literal.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/basic/literal.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>리터럴</h1>
+<ul>
+    <!--주의! 다음 주석을 풀면 예외가 발생함-->
+    <!--    <li>"hello world!" = <span th:text="hello world!"></span></li>-->
+    <li>'hello' + ' world!' = <span th:text="'hello' + ' world!'"></span></li>
+    <li>'hello world!' = <span th:text="'hello world!'"></span></li>
+    <li>'hello ' + ${data} = <span th:text="'hello ' + ${data}"></span></li>
+    <li>리터럴 대체 |hello ${data}| = <span th:text="|hello ${data}|"></span></li>
+</ul>
+</body>
+</html>
+```
+
+#### 리터럴 대체
+
+* 가장 편리한 방법
+* 예) `<span th:text="|hello ${data}|">`
