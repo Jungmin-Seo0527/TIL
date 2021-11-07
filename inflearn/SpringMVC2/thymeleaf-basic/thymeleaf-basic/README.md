@@ -1273,3 +1273,136 @@ var user2 = {"username":"userB","age":20};
 var user3 = {"username":"userC","age":30};
 </script>
 ```
+
+### 1-16. 템플릿 조각
+
+##### TemplateController.java
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/java/hello/thymeleafbasic/basic/TemplateController.java`
+
+````java
+package hello.thymeleafbasic.basic;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/template")
+public class TemplateController {
+
+    @GetMapping("/fragment")
+    public String template() {
+        return "template/fragment/fragmentMain";
+    }
+}
+
+````
+
+##### footer.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/fragment/footer.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="copy">
+    푸터 자리 입니다.
+</footer>
+<footer th:fragment="copyParam (param1, param2)">
+    <p>파라미터 자리 입니다.</p>
+    <p th:text="${param1}"></p>
+    <p th:text="${param2}"></p>
+</footer>
+</body>
+</html>
+```
+
+##### fragmentMain.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/fragment/fragmentMain.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+<h1>부분 포함</h1>
+<h2>부분 포함 insert</h2>
+<div th:insert="~{template/fragment/footer :: copy}"></div>
+
+<h2>부분 포함 replace</h2>
+<div th:replace="~{template/fragment/footer :: copy}"></div>
+
+<h2>부분 포함 단순 표현식</h2>
+<div th:replace="template/fragment/footer :: copy"></div>
+
+<h1>파라미터 사용</h1>
+<div th:replace="~{template/fragment/footer :: copyParam ('데이터1', '데이터2')}"></div>
+</body>
+
+</html>
+```
+
+* `template/fragment/footer :: copy`: `template/fragment/footer.html` 템플릿에 있는 `th:fragment="copy`라는 부분을 템플릿 조각으로 가져와서
+  사용한다는 의미
+
+#### 부분 포함 insert
+
+* `<div th:insert="~{template/fragment/footer :: copy}"></div>`
+
+```
+<h2>부분 포함 insert</h2>
+<div>
+<footer>
+푸터 자리 입니다.
+</footer>
+</div>
+```
+
+* `th:insert`: 현재 태그(`div`) **내부에 추가**한다.
+
+#### 부분 포함 replace
+
+* `<div th:replace="~{template/fragment/footer :: copy}"></div>`
+
+```
+<h2>부분 포함 replace</h2>
+<footer>
+푸터 자리 입니다.
+</footer>
+```
+
+* `th:replace`: 현재 태그(`div`)를 **대체**한다.
+
+#### 부분 포함 단순 표현식
+
+* `<div th:replace="template/fragment/footer :: copy"></div>`
+
+```
+<h2>부분 포함 단순 표현식</h2>
+<footer>
+푸터 자리 입니다.
+</footer>
+```
+
+* `~{...}`이 원칙이지만 템플릿 조각을 사용하는 코드가 단순하면 생략 가능
+
+#### 파라미터 사용
+
+* `<div th:replace="~{tempalte/fragment/footer :: copyParam ('데이터1', '데이터2')}"></div>`
+
+```
+<h1>파라미터 사용</h1>
+<footer>
+<p>파라미터 자리 입니다.</p>
+<p>데이터1</p>
+<p>데이터2</p>
+</footer>
+```
