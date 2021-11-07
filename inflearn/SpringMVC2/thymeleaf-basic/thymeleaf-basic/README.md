@@ -1406,3 +1406,93 @@ public class TemplateController {
 <p>데이터2</p>
 </footer>
 ```
+
+### 1-17. 템플릿 레이아웃1
+
+* 코드 조각을 레이아웃에 넘겨서 사용하는 방법
+
+##### TemplateController.java (추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/template")
+public class TemplateController {
+
+    // ...
+
+    @GetMapping("/layout")
+    public String layout() {
+        return "template/layout/layoutMain";
+    }
+}
+
+```
+
+##### base.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/layout/base.html`
+
+```html
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="common_header(title,links)">
+    <title th:replace="${title}">레이아웃 타이틀</title>
+
+    <!-- 공통 -->
+    <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/awesomeapp.css}">
+    <link rel="shortcut icon" th:href="@{/images/favicon.ico}">
+    <script type="text/javascript" th:src="@{/sh/scripts/codebase.js}"></script>
+
+    <!-- 추가 -->
+    <th:block th:replace="${links}"/>
+</head>
+```
+
+##### layoutMain.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/layout/layoutMain.html`
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="template/layout/base :: common_header(~{::title},~{::link})">
+    <title>메인 타이틀</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/themes/smoothness/jquery-ui.css}">
+</head>
+<body>
+메인 컨텐츠
+</body>
+</html>
+```
+
+##### 결과
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>메인 타이틀</title>
+    <!-- 공통 -->
+    <link rel="stylesheet" type="text/css" media="all" href="/css/awesomeapp.css">
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    <script type="text/javascript" src="/sh/scripts/codebase.js"></script>
+    <!-- 추가 -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/themes/smoothness/jquery-ui.css">
+</head>
+<body>
+메인 컨텐츠
+</body>
+</html>
+```
+
+* `common_header(~{::title}, ~{::link})`
+    * `::title`: 현재 페이지의 title 태크들을 전달
+    * `::link`: 현재 페이지의 link 태그들을 전달
