@@ -1592,4 +1592,4 @@ public class TemplateController {
 * `layoutExtendMain.html`
     * 현재 페이지
     * `<html>`자체를 `th:replace`를 사용해서 변경
-    * 결국 `layoutFile.html`에 필요한 내용을 전달하면서 `<html> 자체를 `layoutFile.html`로 변경
+    * 결국 `layoutFile.html`에 필요한 내용을 전달하면서 `<html>` 자체를 `layoutFile.html`로 변경
