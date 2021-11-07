@@ -1496,3 +1496,100 @@ public class TemplateController {
 * `common_header(~{::title}, ~{::link})`
     * `::title`: 현재 페이지의 title 태크들을 전달
     * `::link`: 현재 페이지의 link 태그들을 전달
+
+### 1-18. 템플릿 레이아웃2
+
+##### TemplateController.java(추가)
+
+```java
+package hello.thymeleafbasic.basic;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/template")
+public class TemplateController {
+
+    // ...
+
+    @GetMapping("/layoutExtend")
+    public String layoutExtend() {
+        return "template/layoutExtend/layoutExtendMain";
+    }
+}
+
+```
+
+##### layoutFile.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/layoutExtend/layoutFile.html`
+
+```html
+<!DOCTYPE html>
+<html th:fragment="layout (title, content)" xmlns:th="http:// www.thymeleaf.org">
+<head>
+    <title th:replace="${title}">레이아웃 타이틀</title>
+</head>
+<body>
+<h1>레이아웃 H1</h1>
+<div th:replace="${content}">
+    <p>레이아웃 컨텐츠</p>
+</div>
+<footer>
+    레이아웃 푸터
+</footer>
+</body>
+</html>
+```
+
+##### layoutExtendMain.html
+
+* `inflearn/SpringMVC2/thymeleaf-basic/thymeleaf-basic/src/main/resources/templates/template/layoutExtend/layoutExtendMain.html`
+
+```html
+<!DOCTYPE html>
+<html th:replace="~{template/layoutExtend/layoutFile :: layout(~{::title},~{::section})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>메인 페이지 타이틀</title>
+</head>
+<body>
+<section>
+    <p>메인 페이지 컨텐츠</p>
+    <div>메인 페이지 포함 내용</div>
+</section>
+</body>
+</html>
+```
+
+##### 결과
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>메인 페이지 타이틀</title>
+</head>
+<body>
+<h1>레이아웃 H1</h1>
+<section>
+    <p>메인 페이지 컨텐츠</p>
+    <div>메인 페이지 포함 내용</div>
+</section>
+<footer>
+    레이아웃 푸터
+</footer>
+</body>
+</html>
+```
+
+* `layoutFile.html`
+    * `<html>`에 `th:fragment`속성이 정의
+    * 이 레이아웃 파일을 기본으로 한다.
+    * 여기에 필요한 내용을 전달해서 부분부분으로 변경
+* `layoutExtendMain.html`
+    * 현재 페이지
+    * `<html>`자체를 `th:replace`를 사용해서 변경
+    * 결국 `layoutFile.html`에 필요한 내용을 전달하면서 `<html> 자체를 `layoutFile.html`로 변경
